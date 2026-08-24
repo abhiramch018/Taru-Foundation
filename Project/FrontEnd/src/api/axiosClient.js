@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : '';
+const baseURL = import.meta.env.VITE_API_URL || 'https://taru-foundation.onrender.com';
 
 const axiosClient = axios.create({
   baseURL,
