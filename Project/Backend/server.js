@@ -13,6 +13,14 @@ const errorMiddleware = require("./middleware/errorMiddleware");
 const cors = require("cors");
 dotenv.config();
 
+// Enable CORS for all incoming requests (including Vercel frontend preflight OPTIONS)
+app.use(cors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 connectDB();
@@ -29,7 +37,6 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use(errorMiddleware);
-app.use(cors());
 
 app.listen(process.env.PORT, () => {
     console.log(`server started on port ${process.env.PORT}`);
