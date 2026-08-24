@@ -85,6 +85,24 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Refreshes user data from the live backend (GET /api/auth/me queries the DB).
+  // Used by the seller onboarding page to detect approval without requiring logout/login.
+  const refreshMe = async () => {
+    try {
+      const data = await authApi.getMe();
+      if (data.user) {
+        const updatedUser = { ...user, ...data.user };
+        localStorage.setItem('taru_user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        return { success: true, user: data.user };
+      }
+      return { success: false };
+    } catch (err) {
+      console.error('refreshMe error:', err.message);
+      return { success: false };
+    }
+  };
+
   const isAuthenticated = Boolean(token && user);
   const sellerStatus = user?.sellerStatus || 'NONE';
   const isSeller = user?.role === 'seller' && (user?.sellerStatus === 'APPROVED' || !user?.sellerStatus);
@@ -111,6 +129,7 @@ export const AuthProvider = ({ children }) => {
         register,
         applySeller,
         logout,
+        refreshMe,
         setUser,
       }}
     >

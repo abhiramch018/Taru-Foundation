@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ArrowRight, Download, Calendar, MapPin } from 'lucide-react';
+import { Package, ArrowRight, Download, Calendar, MapPin, XCircle } from 'lucide-react';
 import { orderApi } from '../api/orderApi';
 import { invoiceApi } from '../api/invoiceApi';
 import { StatusBadge } from '../components/StatusBadge';
@@ -12,6 +12,8 @@ export const OrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelError, setCancelError] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -44,6 +46,26 @@ export const OrdersPage = () => {
     }
   };
 
+  const handleCancelOrder = async (orderId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    setCancelError(null);
+    try {
+      setCancellingId(orderId);
+      const data = await orderApi.cancelOrder(orderId);
+      // Replace the cancelled order in local state with the server's updated order
+      setOrders((prev) =>
+        prev.map((o) => (o._id === orderId ? data.order : o))
+      );
+    } catch (err) {
+      console.error('Cancel error:', err);
+      setCancelError(err.response?.data?.message || 'Failed to cancel order.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16">
@@ -69,6 +91,12 @@ export const OrdersPage = () => {
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
+
+      {cancelError && (
+        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+          {cancelError}
+        </div>
+      )}
 
       {error ? (
         <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
@@ -97,6 +125,8 @@ export const OrdersPage = () => {
               year: 'numeric',
             });
             const isDownloading = downloadingId === order._id;
+            const isCancelling = cancellingId === order._id;
+            const canCancel = ['PLACED', 'CONFIRMED'].includes(order.orderStatus);
 
             return (
               <div
@@ -117,7 +147,21 @@ export const OrdersPage = () => {
                     <StatusBadge status={order.paymentStatus} />
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {canCancel && (
+                      <button
+                        onClick={(e) => handleCancelOrder(order._id, e)}
+                        disabled={isCancelling}
+                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-semibold border border-red-200 flex items-center space-x-1.5 transition-colors disabled:opacity-60"
+                      >
+                        {isCancelling ? (
+                          <div className="w-3.5 h-3.5 border-2 border-red-700 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5" />
+                        )}
+                        <span>Cancel</span>
+                      </button>
+                    )}
                     <button
                       onClick={(e) => handleDownloadInvoice(order._id, e)}
                       disabled={isDownloading}

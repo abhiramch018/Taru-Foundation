@@ -16,7 +16,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export const SellerOnboardingPage = () => {
-  const { user, isAuthenticated, isSeller, isAdmin, isPendingSeller, isRejectedSeller, applySeller, loading } = useAuth();
+  const { user, isAuthenticated, isSeller, isAdmin, isPendingSeller, isRejectedSeller, applySeller, refreshMe, loading } = useAuth();
   const navigate = useNavigate();
 
   // Form State initialized from authenticated user
@@ -32,6 +32,7 @@ export const SellerOnboardingPage = () => {
   const [categories, setCategories] = useState(['Textiles', 'Handicrafts']);
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [justApproved, setJustApproved] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -49,6 +50,25 @@ export const SellerOnboardingPage = () => {
       }
     }
   }, [user]);
+
+  // Poll backend every 15s while application is PENDING.
+  // When admin approves, /api/auth/me returns role='seller'.
+  // Update local auth state and redirect without requiring logout/login.
+  useEffect(() => {
+    if (!isPendingSeller) return;
+
+    const pollInterval = setInterval(async () => {
+      const result = await refreshMe();
+      if (result?.success && result?.user?.role === 'seller') {
+        setJustApproved(true);
+        clearInterval(pollInterval);
+        // Brief delay so the approval banner is visible before redirect
+        setTimeout(() => navigate('/seller'), 3000);
+      }
+    }, 15000);
+
+    return () => clearInterval(pollInterval);
+  }, [isPendingSeller]);
 
   const toggleCategory = (cat) => {
     if (categories.includes(cat)) {
@@ -163,9 +183,21 @@ export const SellerOnboardingPage = () => {
   }
 
   // 4. Pending Review View
-  if (isPendingSeller) {
+  if (isPendingSeller || justApproved) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
+
+        {/* Approval success banner */}
+        {justApproved && (
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center space-x-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-emerald-900">🎉 Seller Application Approved!</p>
+              <p className="text-xs text-emerald-700">Your account has been upgraded to Seller. Redirecting to your Seller Dashboard...</p>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-3xl border border-amber-200 p-8 shadow-card space-y-6">
           <div className="flex items-center space-x-4 pb-4 border-b border-gray-100">
             <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center flex-shrink-0 border border-amber-200">

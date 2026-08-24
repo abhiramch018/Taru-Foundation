@@ -152,8 +152,64 @@ const getOrderById = async (req, res) => {
 };
 
 
+const cancelOrder = async (req, res) => {
+    try {
+        // Ownership enforced: only the buyer who placed the order can cancel it
+        const order = await Order.findOne({
+            _id: req.params.id,
+            buyer: req.user.id
+        }).populate("items.product");
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Order not found"
+            });
+        }
+
+        const cancellableStatuses = ["PLACED", "CONFIRMED"];
+        if (!cancellableStatuses.includes(order.orderStatus)) {
+            return res.status(400).json({
+                message: `Cannot cancel an order that is already ${order.orderStatus}`
+            });
+        }
+
+        // Restore stock for each item
+        for (const item of order.items) {
+            const product = await Product.findById(item.product?._id || item.product);
+            if (product) {
+                product.stock += item.quantity;
+                // If product was UNIQUE and got marked SOLD when stock hit 0, revert it
+                if (product.type === "UNIQUE" && product.status === "SOLD") {
+                    product.status = "APPROVED";
+                }
+                await product.save();
+            }
+        }
+
+        order.orderStatus = "CANCELLED";
+        await order.save();
+
+        // Re-fetch with populated product info for consistent response shape
+        const updatedOrder = await Order.findById(order._id)
+            .populate("items.product", "name price images type");
+
+        res.status(200).json({
+            message: "Order cancelled successfully",
+            order: updatedOrder
+        });
+
+    } catch (error) {
+        console.error("Cancel order error:", error.message);
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+};
+
+
 module.exports = {
     createOrder,
     getMyOrders,
-    getOrderById
+    getOrderById,
+    cancelOrder
 };

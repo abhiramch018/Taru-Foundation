@@ -156,11 +156,13 @@ export const InvoicePage = () => {
               PAYMENT INFORMATION
             </p>
             <p className="font-semibold text-gray-900 text-sm">Direct SHG-Transfer UPI</p>
-            <p className="text-gray-500 font-mono">Status: {order.paymentStatus || 'PAID'}</p>
-            <p className="text-emerald-700 font-semibold flex items-center sm:justify-end space-x-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Escrow Cleared</span>
-            </p>
+            <p className="text-gray-500 font-mono">Status: {order.paymentStatus || 'PENDING'}</p>
+            {order.paymentStatus === 'PAID' && (
+              <p className="text-emerald-700 font-semibold flex items-center sm:justify-end space-x-1">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Escrow Cleared</span>
+              </p>
+            )}
           </div>
         </div>
 
@@ -203,7 +205,7 @@ export const InvoicePage = () => {
         <div className="flex justify-end pt-4 border-t border-gray-200">
           <div className="w-64 space-y-2 text-xs">
             <div className="flex justify-between font-bold text-sm text-gray-900 pt-2 border-t border-gray-300">
-              <span>Total Amount Paid:</span>
+              <span>{order.paymentStatus === 'PAID' ? 'Total Amount Paid:' : 'Total Amount:'}</span>
               <span className="font-serif text-lg text-taru-dark">
                 ₹{order.totalAmount?.toLocaleString('en-IN')}
               </span>

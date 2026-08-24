@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ScrollToTop } from './components/ScrollToTop';
 
 // Public & Buyer Pages
 import { HomePage } from './pages/HomePage';
@@ -37,6 +38,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 export function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <CartProvider>
           <div className="flex flex-col min-h-screen">

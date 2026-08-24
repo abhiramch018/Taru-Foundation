@@ -130,18 +130,26 @@ export const OrderSuccessPage = () => {
           <div className="space-y-2.5 text-xs text-gray-600">
             <div className="flex justify-between">
               <span>Payment Status</span>
-              <span className="font-bold text-emerald-700 uppercase bg-emerald-50 px-2 py-0.5 rounded">
-                {order?.paymentStatus || 'PAID'}
+              <span className={`font-bold uppercase px-2 py-0.5 rounded ${
+                order?.paymentStatus === 'PAID'
+                  ? 'text-emerald-700 bg-emerald-50'
+                  : order?.paymentStatus === 'FAILED'
+                  ? 'text-red-700 bg-red-50'
+                  : 'text-amber-700 bg-amber-50'
+              }`}>
+                {order?.paymentStatus || 'PENDING'}
               </span>
             </div>
             <div className="flex justify-between">
               <span>Order Status</span>
               <span className="font-semibold text-gray-800 uppercase">
-                {order?.orderStatus || 'CONFIRMED'}
+                {order?.orderStatus || 'PLACED'}
               </span>
             </div>
             <div className="flex justify-between pt-2 border-t border-gray-100">
-              <span className="font-bold text-gray-900">Total Paid</span>
+              <span className="font-bold text-gray-900">
+                {order?.paymentStatus === 'PAID' ? 'Total Paid' : 'Total Amount'}
+              </span>
               <span className="font-serif text-lg font-bold text-taru-dark">
                 ₹{(order?.totalAmount || 0).toLocaleString('en-IN')}
               </span>

@@ -3,7 +3,8 @@ const express = require("express");
 const {
     createOrder,
     getMyOrders,
-    getOrderById
+    getOrderById,
+    cancelOrder
 } = require("../controllers/orderController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -32,4 +33,12 @@ router.get(
     getOrderById
 );
 
-module.exports = router;
+// Buyer can cancel their own order only when status is PLACED or CONFIRMED
+router.put(
+    "/:id/cancel",
+    authMiddleware,
+    roleMiddleware("buyer"),
+    cancelOrder
+);
+
+module.exports = router;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Truck, CheckCircle2, Clock, MapPin, Package, Download, HelpCircle, ArrowLeft } from 'lucide-react';
+import { Truck, CheckCircle2, Clock, MapPin, Package, Download, HelpCircle, ArrowLeft, XCircle } from 'lucide-react';
 import { orderApi } from '../api/orderApi';
 import { invoiceApi } from '../api/invoiceApi';
 import { StatusBadge } from '../components/StatusBadge';
@@ -12,6 +12,8 @@ export const OrderTrackingPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -40,6 +42,21 @@ export const OrderTrackingPage = () => {
       alert('Unable to download invoice.');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    setCancelError(null);
+    try {
+      setCancelling(true);
+      const data = await orderApi.cancelOrder(order._id);
+      setOrder(data.order);
+    } catch (err) {
+      console.error('Cancel error:', err);
+      setCancelError(err.response?.data?.message || 'Failed to cancel order.');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -103,8 +120,22 @@ export const OrderTrackingPage = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={currentStatus} />
+          {['PLACED', 'CONFIRMED'].includes(currentStatus) && (
+            <button
+              onClick={handleCancelOrder}
+              disabled={cancelling}
+              className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-semibold transition-colors flex items-center space-x-1.5 disabled:opacity-60"
+            >
+              {cancelling ? (
+                <div className="w-3.5 h-3.5 border-2 border-red-700 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <XCircle className="w-3.5 h-3.5" />
+              )}
+              <span>Cancel Order</span>
+            </button>
+          )}
           <button
             onClick={handleDownloadInvoice}
             disabled={downloading}
@@ -119,6 +150,24 @@ export const OrderTrackingPage = () => {
           </button>
         </div>
       </div>
+
+      {/* Cancel error */}
+      {cancelError && (
+        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+          {cancelError}
+        </div>
+      )}
+
+      {/* CANCELLED banner */}
+      {currentStatus === 'CANCELLED' && (
+        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 flex items-center space-x-3">
+          <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-bold text-red-800">Order Cancelled</p>
+            <p className="text-xs text-red-600">This order has been cancelled. Stock has been restored. If a payment was made, please contact support.</p>
+          </div>
+        </div>
+      )}
 
       {/* Main Tracking Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

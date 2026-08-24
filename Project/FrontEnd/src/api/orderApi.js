@@ -18,4 +18,10 @@ export const orderApi = {
     const response = await axiosClient.get(`/api/orders/${id}`);
     return response.data;
   },
+
+  // PUT /api/orders/:id/cancel (Buyer only — PLACED or CONFIRMED only)
+  cancelOrder: async (id) => {
+    const response = await axiosClient.put(`/api/orders/${id}/cancel`);
+    return response.data;
+  },
 };
