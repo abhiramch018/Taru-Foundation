@@ -10,6 +10,7 @@ import { ScrollToTop } from './components/ScrollToTop';
 // Public & Buyer Pages
 import { HomePage } from './pages/HomePage';
 import { LoginPage, RegisterPage } from './pages/LoginPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CartPage } from './pages/CartPage';
@@ -49,6 +50,7 @@ export function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/products/:id" element={<ProductDetailPage />} />
 
