@@ -1,5 +1,13 @@
 const express = require("express");
-const { registerUser, loginUser, applySeller } = require("../controllers/authController");
+const {
+    registerUser,
+    verifyOtp,
+    resendOtp,
+    loginUser,
+    applySeller,
+    forgotPassword,
+    resetPassword
+} = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const User = require("../models/User");
@@ -7,8 +15,12 @@ const User = require("../models/User");
 const router = express.Router();
 
 router.post("/register", registerUser);
+router.post("/verify-otp", verifyOtp);
+router.post("/resend-otp", resendOtp);
 
 router.post("/login", loginUser);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 
 router.post("/apply-seller", authMiddleware, applySeller);
 

@@ -48,13 +48,45 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
     try {
       const data = await authApi.register(userData);
-      return { success: true, message: data.message };
+      return {
+        success: true,
+        message: data.message,
+        requiresOtp: data.requiresOtp,
+        email: data.email
+      };
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed. Please check your inputs.';
       setAuthError(msg);
       return { success: false, message: msg };
     } finally {
       setLoading(false);
+    }
+  };
+
+  const verifyOtp = async (email, otp) => {
+    setLoading(true);
+    setAuthError(null);
+    try {
+      const data = await authApi.verifyOtp(email, otp);
+      return { success: true, message: data.message, user: data.user };
+    } catch (err) {
+      const msg = err.response?.data?.message || 'OTP verification failed.';
+      setAuthError(msg);
+      return { success: false, message: msg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendOtp = async (email) => {
+    setAuthError(null);
+    try {
+      const data = await authApi.resendOtp(email);
+      return { success: true, message: data.message };
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to resend OTP.';
+      const cooldownSeconds = err.response?.data?.cooldownSeconds;
+      return { success: false, message: msg, cooldownSeconds };
     }
   };
 
@@ -127,6 +159,8 @@ export const AuthProvider = ({ children }) => {
         isAdmin,
         login,
         register,
+        verifyOtp,
+        resendOtp,
         applySeller,
         logout,
         refreshMe,
